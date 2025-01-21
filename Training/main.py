@@ -9,10 +9,14 @@ from PIL import Image
 catAnnotationFile = "Training Data/Training Set/Cats/cats.json"
 dogAnnotationFile = "Training Data/Training Set/Dogs/dogs.json"
 catCOCO = COCO(catAnnotationFile)
+print("Loaded COCO dataset for cats")
 dogCOCO = COCO(dogAnnotationFile)
+print("Loaded COCO dataset for dogs")
 
 catImageIds = list(catCOCO.imgs.keys())
+print(f"Loaded {len(catImageIds)} images for cats")
 dogImageIds = list(dogCOCO.imgs.keys())
+print(f"Loaded {len(dogImageIds)} images for dogs")
 
 
 # Load the images
@@ -78,6 +82,7 @@ def padAnnotations(annotations, maxAnnotations=10):
 
 def generateData(COCO, imageIds, animal, axAnnotations=10):
     run = 0
+    totalImages = len(imageIds)
     for imageId in imageIds:
         run += 1
         imageInfo = COCO.loadImgs([imageId])[0]
@@ -89,7 +94,7 @@ def generateData(COCO, imageIds, animal, axAnnotations=10):
         paddedAnnotation = padAnnotations(annotation)
         if run % 25 == 0:
             print(
-                f"Loaded image {imageId} with shape {image.shape} and annotations {paddedAnnotation.shape}"
+                f"Loaded image {imageId} of {totalImages} with shape {image.shape} and annotations {paddedAnnotation.shape}"
             )
     yield image, paddedAnnotation
 

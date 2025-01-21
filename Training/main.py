@@ -92,7 +92,7 @@ def generateData(COCO, imageIds, animal, axAnnotations=10):
         annotation = loadAnnotations(COCO, imageId)
         annotation = resizeBoundingBoxes(annotation, scaleFactor)
         paddedAnnotation = padAnnotations(annotation)
-        if run % 25 == 0:
+        if run % 500 == 0:
             print(
                 f"Loaded image {imageId} of {totalImages} with shape {image.shape} and annotations {paddedAnnotation.shape}"
             )
@@ -106,7 +106,8 @@ model = tf.keras.Sequential(
     [
         model,
         tf.keras.layers.GlobalAveragePooling2D(),
-        tf.keras.layers.Dense(1, activation="sigmoid"),
+        tf.keras.layers.Dense(40),
+        tf.keras.layers.Reshape((10, 4)),
     ]
 )
 
@@ -117,14 +118,14 @@ catTrainingDataset = tf.data.Dataset.from_generator(
     lambda: generateData(catCOCO, catImageIds, "Cats"),
     output_signature=(
         tf.TensorSpec(shape=(244, 244, 3), dtype=tf.float32),
-        tf.TensorSpec(shape=(1), dtype=tf.float32),
+        tf.TensorSpec(shape=(10, 4), dtype=tf.float32),
     ),
 )
 dogTrainingDataset = tf.data.Dataset.from_generator(
     lambda: generateData(dogCOCO, dogImageIds, "Dogs"),
     output_signature=(
         tf.TensorSpec(shape=(244, 244, 3), dtype=tf.float32),
-        tf.TensorSpec(shape=(1), dtype=tf.float32),
+        tf.TensorSpec(shape=(10, 4), dtype=tf.float32),
     ),
 )
 trainingDataset = catTrainingDataset.concatenate(dogTrainingDataset)

@@ -136,4 +136,4 @@ trainingDataset = (
 trainedModel = model.fit(trainingDataset, epochs=10)
 
 # Save the model
-model.save("Model")
+model.save("Model/catDogDetector.h5")

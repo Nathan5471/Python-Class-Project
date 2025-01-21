@@ -6,8 +6,8 @@ import numpy as np
 from PIL import Image
 
 # Load the COCO dataset
-catAnnotationFile = "Training Data/Training Set/Cats/cats.json"
-dogAnnotationFile = "Training Data/Training Set/Dogs/dogs.json"
+catAnnotationFile = "Training/Training Data/Training Set/Cats/cats.json"
+dogAnnotationFile = "Training/Training Data/Training Set/Dogs/dogs.json"
 catCOCO = COCO(catAnnotationFile)
 print("Loaded COCO dataset for cats")
 dogCOCO = COCO(dogAnnotationFile)
@@ -87,7 +87,7 @@ def generateData(COCO, imageIds, animal, axAnnotations=10):
         run += 1
         imageInfo = COCO.loadImgs([imageId])[0]
         scaleFactor = calculateScaleFactor(imageInfo)
-        imagePath = f"/content/drive/My Drive/Training Set/{animal}/Images/{imageInfo['file_name']}"
+        imagePath = f"Training/Training Data/Training Set/{animal}/Images/{imageInfo['file_name']}"
         image = loadImage(imagePath)
         annotation = loadAnnotations(COCO, imageId)
         annotation = resizeBoundingBoxes(annotation, scaleFactor)

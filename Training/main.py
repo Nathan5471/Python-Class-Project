@@ -72,11 +72,19 @@ def loadAnnotations(COCO, imageId):
 
 
 def padAnnotations(annotations, maxAnnotations=10):
-    paddedAnnotations = np.zeros((maxAnnotations, 4))
+    paddedAnnotations = np.zeros((maxAnnotations, 5))
     for i, annotation in enumerate(annotations):
         if i >= maxAnnotations:
             break
-        paddedAnnotations[i, :] = annotation["bbox"]
+        boundingBox = annotation["bbox"]
+        categoryId = annotation["category_id"]
+        paddedAnnotations[i, :] = [
+            boundingBox[0],
+            boundingBox[1],
+            boundingBox[2],
+            boundingBox[3],
+            categoryId,
+        ]
     return paddedAnnotations
 
 
@@ -93,6 +101,8 @@ def generateData(COCO, imageIds, animal, axAnnotations=10):
         annotation = resizeBoundingBoxes(annotation, scaleFactor)
         paddedAnnotation = padAnnotations(annotation)
         if run % 500 == 0:
+            print(annotation)
+            print(paddedAnnotation)
             print(
                 f"Loaded image {imageId} of {totalImages} with shape {image.shape} and annotations {paddedAnnotation.shape}"
             )
@@ -106,8 +116,8 @@ model = tf.keras.Sequential(
     [
         model,
         tf.keras.layers.GlobalAveragePooling2D(),
-        tf.keras.layers.Dense(40),
-        tf.keras.layers.Reshape((10, 4)),
+        tf.keras.layers.Dense(50),
+        tf.keras.layers.Reshape((10, 5)),
     ]
 )
 
@@ -118,14 +128,14 @@ catTrainingDataset = tf.data.Dataset.from_generator(
     lambda: generateData(catCOCO, catImageIds, "Cats"),
     output_signature=(
         tf.TensorSpec(shape=(244, 244, 3), dtype=tf.float32),
-        tf.TensorSpec(shape=(10, 4), dtype=tf.float32),
+        tf.TensorSpec(shape=(10, 5), dtype=tf.float32),
     ),
 )
 dogTrainingDataset = tf.data.Dataset.from_generator(
     lambda: generateData(dogCOCO, dogImageIds, "Dogs"),
     output_signature=(
         tf.TensorSpec(shape=(244, 244, 3), dtype=tf.float32),
-        tf.TensorSpec(shape=(10, 4), dtype=tf.float32),
+        tf.TensorSpec(shape=(10, 5), dtype=tf.float32),
     ),
 )
 trainingDataset = catTrainingDataset.concatenate(dogTrainingDataset)

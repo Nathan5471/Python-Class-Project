@@ -146,4 +146,5 @@ trainingDataset = (
 trainedModel = model.fit(trainingDataset, epochs=10)
 
 # Save the model
-model.save("Model/catDogDetector.h5")
+model.save("Model/catDogDetector.keras")
+print("Model saved")

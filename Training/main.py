@@ -61,7 +61,7 @@ def loadImage(imagePath):
     if image is None:
         raise ValueError(f"Image not found at path: {imagePath}")
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image = cv2.resize(image, (244, 244))
+    image = cv2.resize(image, (244, 244)).astype(np.float32) / 255
     return image
 
 
@@ -121,7 +121,7 @@ model = tf.keras.Sequential(
     ]
 )
 
-model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+model.compile(optimizer="adam", loss="mean_sqaured_error", metrics=["accuracy"])
 
 # Train the model
 catTrainingDataset = tf.data.Dataset.from_generator(

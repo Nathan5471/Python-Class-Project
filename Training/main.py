@@ -121,7 +121,7 @@ model = tf.keras.Sequential(
     ]
 )
 
-model.compile(optimizer="adam", loss="mean_sqaured_error", metrics=["accuracy"])
+model.compile(optimizer="adam", loss="mean_squared_error", metrics=["accuracy"])
 
 # Train the model
 catTrainingDataset = tf.data.Dataset.from_generator(

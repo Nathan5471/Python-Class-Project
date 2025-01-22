@@ -109,6 +109,20 @@ def generateData(COCO, imageIds, animal, axAnnotations=10):
     yield image, paddedAnnotation
 
 
+def combinedLoss(y_true, y_pred):
+    yTrueBoxes = y_true[..., :4]
+    yPredictionBoxes = y_pred[..., :4]
+    yTrueClasses = y_true[..., 4]
+    yPredictionClasses = y_pred[..., 4]
+
+    box_loss = tf.keras.losses.MeanSquaredError()(yTrueBoxes, yPredictionBoxes)
+
+    class_loss = tf.keras.losses.BinaryCrossentropy()(yTrueClasses, yPredictionClasses)
+
+    total_loss = box_loss + class_loss
+    return total_loss
+
+
 model = tf.keras.applications.MobileNetV2(
     input_shape=(244, 244, 3), include_top=False, weights="imagenet"
 )
@@ -121,7 +135,7 @@ model = tf.keras.Sequential(
     ]
 )
 
-model.compile(optimizer="adam", loss="mean_squared_error", metrics=["accuracy"])
+model.compile(optimizer="adam", loss=combinedLoss, metrics=["accuracy"])
 
 # Train the model
 catTrainingDataset = tf.data.Dataset.from_generator(

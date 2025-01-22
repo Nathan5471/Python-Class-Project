@@ -1,50 +1,36 @@
 import tensorflow as tf
 import cv2
 import matplotlib.pyplot as plt
-import numpy as np
 
-model = tf.keras.models.load_model("Model/catDogDetector.keras")
-
-
-def calculateScaleFactor(imageInfo, newWidth=244, newHeight=244):
-    oldWidth = imageInfo["width"]
-    oldHeight = imageInfo["height"]
-    widthScaleFactor = oldWidth / newWidth
-    heightScaleFactor = oldHeight / newHeight
-    return (widthScaleFactor, heightScaleFactor)
+model = tf.keras.models.load_model("Model/catDogDetector.h5")
 
 
 def loadImage(imagePath):
     image = cv2.imread(imagePath)
     if image is None:
         raise ValueError(f"Image not found at path: {imagePath}")
-    height, width = image.shape[:2]
-    print(height, width)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image = cv2.resize(image, (244, 244)).astype(np.float32) / 255
-    print(image.shape)
-    scaleFactor = calculateScaleFactor({"width": width, "height": height})
-    return image, scaleFactor
+    image = cv2.resize(image, (244, 244))
+    return image
 
 
 def makePrediction(imagePath):
-    image, scaleFactor = loadImage(imagePath)
+    image = loadImage(imagePath)
     image = image.reshape(1, 244, 244, 3)
     prediction = model.predict(image)
     return prediction
 
 
 def visualizeImage(imagePath, prediction):
-    image, scaleFactor = loadImage(imagePath)
-    print(scaleFactor)
+    image = loadImage(imagePath)
     plt.imshow(image)
     ax = plt.gca()
     for box in prediction:
-        x, y, width, heigth, categoryId = box
+        x, y, width, heigth = box
         rect = plt.Rectangle(
-            (x * scaleFactor[0], y * scaleFactor[1]),
-            width * scaleFactor[0],
-            heigth * scaleFactor[1],
+            (x, y),
+            (width * 244),
+            (heigth * 244),
             linewidth=1,
             edgecolor="r",
             facecolor="none",
@@ -54,9 +40,9 @@ def visualizeImage(imagePath, prediction):
 
 
 prediction = makePrediction(
-    "C:/Users/natha/Downloads/archive/test_set/test_set/dogs/dog.4765.jpg"
+    "C:/Users/natha/Downloads/archive/test_set/test_set/dogs/dog.4989.jpg"
 )[0]
 print(prediction)
 visualizeImage(
-    "C:/Users/natha/Downloads/archive/test_set/test_set/dogs/dog.4765.jpg", prediction
+    "C:/Users/natha/Downloads/archive/test_set/test_set/dogs/dog.4846.jpg", prediction
 )

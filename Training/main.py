@@ -71,24 +71,7 @@ def loadAnnotations(COCO, imageId):
     return annotations
 
 
-def padAnnotations(annotations, maxAnnotations=10):
-    paddedAnnotations = np.zeros((maxAnnotations, 5))
-    for i, annotation in enumerate(annotations):
-        if i >= maxAnnotations:
-            break
-        boundingBox = annotation["bbox"]
-        categoryId = annotation["category_id"]
-        paddedAnnotations[i, :] = [
-            boundingBox[0],
-            boundingBox[1],
-            boundingBox[2],
-            boundingBox[3],
-            categoryId,
-        ]
-    return paddedAnnotations
-
-
-def generateData(COCO, imageIds, animal, axAnnotations=10):
+def generateData(COCO, imageIds, animal):
     run = 0
     totalImages = len(imageIds)
     for imageId in imageIds:
@@ -97,16 +80,14 @@ def generateData(COCO, imageIds, animal, axAnnotations=10):
         scaleFactor = calculateScaleFactor(imageInfo)
         imagePath = f"Training/Training Data/Training Set/{animal}/Images/{imageInfo['file_name']}"
         image = loadImage(imagePath)
-        annotation = loadAnnotations(COCO, imageId)
-        annotation = resizeBoundingBoxes(annotation, scaleFactor)
-        paddedAnnotation = padAnnotations(annotation)
+        annotations = loadAnnotations(COCO, imageId)
+        annotations = resizeBoundingBoxes(annotations, scaleFactor)
         if run % 500 == 0:
-            print(annotation)
-            print(paddedAnnotation)
+            print(annotations)
             print(
-                f"Loaded image {imageId} of {totalImages} with shape {image.shape} and annotations {paddedAnnotation.shape}"
+                f"Loaded image {imageId} of {totalImages} with shape {image.shape} and annotations {annotations.shape}"
             )
-    yield image, paddedAnnotation
+    yield image, annotations
 
 
 def combinedLoss(y_true, y_pred):
@@ -115,12 +96,12 @@ def combinedLoss(y_true, y_pred):
     yTrueClasses = y_true[..., 4]
     yPredictionClasses = y_pred[..., 4]
 
-    box_loss = tf.keras.losses.MeanSquaredError()(yTrueBoxes, yPredictionBoxes)
+    boxLoss = tf.keras.losses.MeanSquaredError()(yTrueBoxes, yPredictionBoxes)
 
-    class_loss = tf.keras.losses.BinaryCrossentropy()(yTrueClasses, yPredictionClasses)
+    classLoss = tf.keras.losses.BinaryCrossentropy()(yTrueClasses, yPredictionClasses)
 
-    total_loss = box_loss + class_loss
-    return total_loss
+    totalLoss = boxLoss + classLoss
+    return totalLoss
 
 
 model = tf.keras.applications.MobileNetV2(
@@ -130,8 +111,7 @@ model = tf.keras.Sequential(
     [
         model,
         tf.keras.layers.GlobalAveragePooling2D(),
-        tf.keras.layers.Dense(50),
-        tf.keras.layers.Reshape((10, 5)),
+        tf.keras.layers.Reshape((None, 5)),
     ]
 )
 
@@ -142,14 +122,14 @@ catTrainingDataset = tf.data.Dataset.from_generator(
     lambda: generateData(catCOCO, catImageIds, "Cats"),
     output_signature=(
         tf.TensorSpec(shape=(244, 244, 3), dtype=tf.float32),
-        tf.TensorSpec(shape=(10, 5), dtype=tf.float32),
+        tf.TensorSpec(shape=(None, 5), dtype=tf.float32),
     ),
 )
 dogTrainingDataset = tf.data.Dataset.from_generator(
     lambda: generateData(dogCOCO, dogImageIds, "Dogs"),
     output_signature=(
         tf.TensorSpec(shape=(244, 244, 3), dtype=tf.float32),
-        tf.TensorSpec(shape=(10, 5), dtype=tf.float32),
+        tf.TensorSpec(shape=(None, 5), dtype=tf.float32),
     ),
 )
 trainingDataset = catTrainingDataset.concatenate(dogTrainingDataset)

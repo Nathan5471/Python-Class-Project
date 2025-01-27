@@ -111,7 +111,7 @@ model = tf.keras.Sequential(
     [
         model,
         tf.keras.layers.GlobalAveragePooling2D(),
-        tf.keras.layers.Reshape((None, 5)),
+        tf.keras.layers.Reshape((5)),
     ]
 )
 

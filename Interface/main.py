@@ -1,79 +1,52 @@
-import tensorflow as tf
-import cv2
-import matplotlib.pyplot as plt
-import numpy as np
+import tkinter as tk
+from tkinter import filedialog
+from PIL import Image, ImageTk, ImageDraw, ImageFont
 
 
-def combinedLoss(y_true, y_pred):
-    yTrueBoxes = y_true[..., :4]
-    yPredictionBoxes = y_pred[..., :4]
-    yTrueClasses = y_true[..., 4]
-    yPredictionClasses = y_pred[..., 4]
-
-    boxLoss = tf.keras.losses.MeanSquaredError()(yTrueBoxes, yPredictionBoxes)
-
-    classLoss = tf.keras.losses.BinaryCrossentropy()(yTrueClasses, yPredictionClasses)
-
-    totalLoss = boxLoss + classLoss
-    return totalLoss
-
-
-model = tf.keras.models.load_model(
-    "Model/catDogDetector.keras", custom_objects={"combinedLoss": combinedLoss}
-)
-
-
-def calculateScaleFactor(imageInfo, newWidth=244, newHeight=244):
-    oldWidth = imageInfo["width"]
-    oldHeight = imageInfo["height"]
-    widthScaleFactor = oldWidth / newWidth
-    heightScaleFactor = oldHeight / newHeight
-    return (widthScaleFactor, heightScaleFactor)
+def runModel(imagePath):
+    print("Not implemented yet. Function to run model.")
 
 
 def loadImage(imagePath):
-    image = cv2.imread(imagePath)
-    if image is None:
-        raise ValueError(f"Image not found at path: {imagePath}")
-    height, width = image.shape[:2]
-    print(height, width)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image = cv2.resize(image, (244, 244)).astype(np.float32) / 255
-    print(image.shape)
-    scaleFactor = calculateScaleFactor({"width": width, "height": height})
-    return image, scaleFactor
+    image = Image.open(imagePath)
+    image = image.resize((640, 640))
+    return image
 
 
-def makePrediction(imagePath):
-    image, scaleFactor = loadImage(imagePath)
-    image = image.reshape(1, 244, 244, 3)
-    prediction = model.predict(image)
-    return prediction
+def uploadImage():
+    imagePath = filedialog.askopenfilename(
+        filetypes=[("Image files", "*.jpg *.jpeg *.png")]
+    )
+    if imagePath:
+        global image
+        image = loadImage(imagePath)
+        imageTk = ImageTk.PhotoImage(image)
+        imageLabel.config(image=imageTk)
+        imageLabel.image = imageTk  # Keep a reference to avoid garbage collection
 
 
-def visualizeImage(imagePath, prediction):
-    image, scaleFactor = loadImage(imagePath)
-    print(scaleFactor)
-    plt.imshow(image)
-    ax = plt.gca()
-    for box in prediction:
-        x, y, width, heigth, categoryId = box
-        rect = plt.Rectangle(
-            (x * scaleFactor[0], y * scaleFactor[1]),
-            width * scaleFactor[0],
-            heigth * scaleFactor[1],
-            linewidth=1,
-            edgecolor="r",
-            facecolor="none",
-        )
-        ax.add_patch(rect)
-    plt.show()
+def detectImage():
+    print("Not implemented yet. Function to detect image from button press.")
 
 
-prediction = makePrediction(
-    "C:/Users/natha/Downloads/archive/test_set/test_set/dogs/dog.4765.jpg"
-)[0]
-print(prediction)
-visualizeImage(
-    "C:/Users/natha/Downloads/archive/test_set/test_set/dogs/dog.4765.jpg", prediction
-)
+# Create the main window
+window = tk.Tk()
+window.title("Cat and Dog Detector")
+window.geometry("800x600")
+
+# Create title
+title = tk.Label(window, text="Cat and Dog Detector", font=("Arial", 24))
+title.grid(row=0, column=0, columnspan=2, pady=20)
+
+# Create buttons
+uploadButton = tk.Button(window, text="Upload Image", command=uploadImage)
+uploadButton.grid(row=1, column=0, padx=20)
+detectButton = tk.Button(window, text="Detect")
+detectButton.grid(row=1, column=1, padx=20)
+
+# Create image display area
+imageLabel = tk.Label(window)
+imageLabel.grid(row=2, column=0, columnspan=2, pady=20)
+
+# Run the application
+window.mainloop()

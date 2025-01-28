@@ -14,7 +14,8 @@ print("Labeling images...")
 inputFiles = os.listdir(inputFolder)
 inputFilesAmount = len(inputFiles)
 print("{inputFilesAmount} images found in the input folder.")
-currentInputFile = 0
-results = model.predict(source=inputFolder, save=True, save_dir=outputFolder)
+results = model.predict(
+    source=inputFolder, save=True, project="Testing/Output", name="Results"
+)
 
 print("Image labeling complete!")

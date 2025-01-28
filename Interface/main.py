@@ -7,11 +7,15 @@ from ultralytics import YOLO
 
 
 def runModel(image, filename):
-    model.predict(source=imagePath, conf=0.4, save=True, save_dir="Interface/Images")
-
     name, ext = os.path.splitext(filename)
-    outputFileName = f"{name}_predictions{ext}"
-
+    outputFileName = f"{name}/image0.jpg"
+    model.predict(
+        image,
+        conf=0.4,
+        save=True,
+        project="Interface/Output",
+        name=name,
+    )
     return outputFileName
 
 

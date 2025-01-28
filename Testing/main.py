@@ -16,8 +16,8 @@ for filename in inputFiles:
     if currentInputFile % 10 == 0:
         print(f"Labeling image {currentInputFile} of {inputFilesAmount}")
     if filename.endswith((".jpg", ".jpeg", ".png")):
-        image_path = os.path.join(inputFolder, filename)
-        image = cv2.imread(image_path)
+        imagePath = os.path.join(inputFolder, filename)
+        image = cv2.imread(imagePath)
 
         results = model.predict(image)
 
@@ -28,11 +28,11 @@ for filename in inputFiles:
                 x1, y1, x2, y2 = map(int, box.xyxy[0])
                 label = names[int(box.cls[0])]
                 score = box.conf[0]
-                label_text = f"{label}: {score:.2f}"
+                labelText = f"{label}: {score:.2f}"
                 cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
                 cv2.putText(
                     image,
-                    label_text,
+                    labelText,
                     (x1, y1 - 10),
                     cv2.FONT_HERSHEY_SIMPLEX,
                     0.5,

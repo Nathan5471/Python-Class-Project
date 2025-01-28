@@ -1,10 +1,38 @@
 import tkinter as tk
+import shutil
+import os
 from tkinter import filedialog
 from PIL import Image, ImageTk, ImageDraw, ImageFont
+from ultralytics import YOLO
+
+
+def draw_boxes(image, boxes, labels, scores, names):
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.load_default()
+
+    for box, label, score in zip(boxes, labels, scores):
+        x1, y1, x2, y2 = map(int, box.xyxy[0])
+        labelText = f"{names[int(label)]}: {score:.2f}"
+        draw.rectangle([x1, y1, x2, y2], outline="green", width=2)
+        draw.text((x1, y1 - 10), labelText, fill="green", font=font)
+
+    return image
 
 
 def runModel(image):
-    print("Not implemented yet. Function to run model on image.")
+    predictions = model.predict(image)
+
+    for prediction in predictions:
+        boxes = prediction.boxes
+        names = prediction.names
+        for box in boxes:
+            score = box.conf[0]
+            image = draw_boxes(image, [box], [box.cls[0]], [score], names)
+
+    outputImage = os.path.join("Interface/Images", "output.jpg")
+    image.save(outputImage)
+
+    return True
 
 
 def loadImage(imagePath):
@@ -17,8 +45,11 @@ def uploadImage():
     imagePath = filedialog.askopenfilename(
         filetypes=[("Image files", "*.jpg *.jpeg *.png")]
     )
-    if imagePath:
+    if imagePath and os.path.exists(imagePath):
         global image
+        filename = os.path.basename(imagePath)
+        shutil.copy(imagePath, "Interface/Images")
+        imagePath = os.path.join("Interface/Images", filename)
         image = loadImage(imagePath)
         imageTk = ImageTk.PhotoImage(image)
         imageLabel.config(image=imageTk)
@@ -26,8 +57,18 @@ def uploadImage():
 
 
 def detectImage():
-    prediction = runModel(image)
+    completed = runModel(image)
+    if completed:
+        labeledImage = loadImage("Interface/Images/output.jpg")
+        labeledImageTk = ImageTk.PhotoImage(labeledImage)
+        imageLabel.config(image=labeledImageTk)
+        imageLabel.image = (
+            labeledImageTk  # Keep a reference to avoid garbage collection
+        )
 
+
+# Load the model
+model = YOLO("Model/my_model.pt")
 
 # Create the main window
 window = tk.Tk()

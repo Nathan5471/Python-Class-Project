@@ -6,33 +6,13 @@ from PIL import Image, ImageTk, ImageDraw, ImageFont
 from ultralytics import YOLO
 
 
-def draw_boxes(image, boxes, labels, scores, names):
-    draw = ImageDraw.Draw(image)
-    font = ImageFont.load_default()
+def runModel(image, filename):
+    model.predict(source=imagePath, conf=0.4, save=True, save_dir="Interface/Images")
 
-    for box, label, score in zip(boxes, labels, scores):
-        x1, y1, x2, y2 = map(int, box.xyxy[0])
-        labelText = f"{names[int(label)]}: {score:.2f}"
-        draw.rectangle([x1, y1, x2, y2], outline="green", width=2)
-        draw.text((x1, y1 - 10), labelText, fill="green", font=font)
+    name, ext = os.path.splitext(filename)
+    outputFileName = f"{name}_predictions{ext}"
 
-    return image
-
-
-def runModel(image):
-    predictions = model.predict(image)
-
-    for prediction in predictions:
-        boxes = prediction.boxes
-        names = prediction.names
-        for box in boxes:
-            score = box.conf[0]
-            image = draw_boxes(image, [box], [box.cls[0]], [score], names)
-
-    outputImage = os.path.join("Interface/Images", "output.jpg")
-    image.save(outputImage)
-
-    return True
+    return outputFileName
 
 
 def loadImage(imagePath):
@@ -42,11 +22,13 @@ def loadImage(imagePath):
 
 
 def uploadImage():
+    global imagePath
     imagePath = filedialog.askopenfilename(
         filetypes=[("Image files", "*.jpg *.jpeg *.png")]
     )
     if imagePath and os.path.exists(imagePath):
         global image
+        global filename
         filename = os.path.basename(imagePath)
         shutil.copy(imagePath, "Interface/Images")
         imagePath = os.path.join("Interface/Images", filename)
@@ -57,9 +39,9 @@ def uploadImage():
 
 
 def detectImage():
-    completed = runModel(image)
-    if completed:
-        labeledImage = loadImage("Interface/Images/output.jpg")
+    outputFileName = runModel(image, filename)
+    if outputFileName:
+        labeledImage = loadImage(f"Interface/Output/{outputFileName}")
         labeledImageTk = ImageTk.PhotoImage(labeledImage)
         imageLabel.config(image=labeledImageTk)
         imageLabel.image = (

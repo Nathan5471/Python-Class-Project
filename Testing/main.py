@@ -4,7 +4,11 @@ import cv2
 
 model = YOLO("Model/my_model.pt")
 inputFolder = "Testing/Input"
+if not (os.path.exists(inputFolder)):
+    os.mkdir(inputFolder)
 outputFolder = "Testing/Output"
+if not (os.path.exists(outputFolder)):
+    os.mkdir(outputFolder)
 
 print("Labeling images...")
 inputFiles = os.listdir(inputFolder)

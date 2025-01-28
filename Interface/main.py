@@ -15,9 +15,9 @@ def runModel(image, filename):
     return outputFileName
 
 
-def loadImage(imagePath):
+def loadImage(imagePath, size=(640, 640)):
     image = Image.open(imagePath)
-    image = image.resize((640, 640))
+    image = image.resize(size)
     return image
 
 
@@ -38,6 +38,20 @@ def uploadImage():
         imageLabel.image = imageTk  # Keep a reference to avoid garbage collection
 
 
+def loadPreviousImage():
+    imagePath = filedialog.askopenfilename(
+        initialdir="Interface/Images", filetypes=[("Image files", "*.jpg *.jpeg *.png")]
+    )
+    if imagePath and os.path.exists(imagePath):
+        global image
+        global filename
+        filename = os.path.basename(imagePath)
+        image = loadImage(imagePath)
+        imageTk = ImageTk.PhotoImage(image)
+        imageLabel.config(image=imageTk)
+        imageLabel.image = imageTk  # Keep a reference to avoid garbage collection
+
+
 def detectImage():
     outputFileName = runModel(image, filename)
     if outputFileName:
@@ -49,6 +63,12 @@ def detectImage():
         )
 
 
+# Creates needed folders
+if not (os.path.exists("Interface/Images")):
+    os.mkdir("Interface/Images")
+if not (os.path.exists("Interface/Output")):
+    os.mkdir("Interface/Output")
+
 # Load the model
 model = YOLO("Model/my_model.pt")
 
@@ -59,19 +79,21 @@ window.attributes("-fullscreen", True)
 
 # Create title
 title = tk.Label(window, text="Cat and Dog Detector", font=("Arial", 24))
-title.grid(row=0, column=0, columnspan=3, pady=20)
+title.grid(row=0, column=0, columnspan=4, pady=20)
 
 # Create buttons
 uploadButton = tk.Button(window, text="Upload Image", command=uploadImage)
 uploadButton.grid(row=1, column=0, padx=20)
+loadButton = tk.Button(window, text="Load Images", command=loadPreviousImage)
+loadButton.grid(row=1, column=1, padx=20)
 detectButton = tk.Button(window, text="Detect", command=detectImage)
-detectButton.grid(row=1, column=1, padx=20)
+detectButton.grid(row=1, column=2, padx=20)
 exitButton = tk.Button(window, text="Exit", command=window.quit)
-exitButton.grid(row=1, column=2, padx=20)
+exitButton.grid(row=1, column=3, padx=20)
 
 # Create image display area
 imageLabel = tk.Label(window)
-imageLabel.grid(row=2, column=0, columnspan=3, pady=20)
+imageLabel.grid(row=2, column=0, columnspan=4, pady=20)
 
 # Run the application
 window.mainloop()

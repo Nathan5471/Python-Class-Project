@@ -19,10 +19,72 @@ def runModel(image, filename):
     return outputFileName
 
 
+def displayThumbnails(index=0):
+    for widget in thumbnailsFrame.winfo_children():
+        widget.destroy()
+
+    savedImagesPath = "Interface/Images"
+    files = os.listdir(savedImagesPath)
+    fileCount = len(files)
+    file = -1
+    small = index * 6
+    large = small + 5
+
+    for filename in files:
+        if (
+            filename.endswith(".jpg")
+            or filename.endswith(".jpeg")
+            or filename.endswith(".png")
+        ):
+            file += 1
+            if file < small:
+                continue
+            if file > large:
+                break
+            imagePath = os.path.join(savedImagesPath, filename)
+            image = loadImage(imagePath)
+            image.thumbnail((100, 100))
+            imageTk = ImageTk.PhotoImage(image)
+
+            thumbnailFrame = tk.Frame(thumbnailsFrame)
+            thumbnailFrame.pack(pady=5)
+
+            thumbnailLabel = tk.Label(thumbnailFrame, image=imageTk)
+            thumbnailLabel.image = imageTk
+            thumbnailLabel.pack(side=tk.LEFT)
+
+            loadButton = tk.Button(
+                thumbnailFrame,
+                text="Load",
+                command=lambda imgPath=imagePath: loadPreviousImage(imgPath),
+            )
+            loadButton.pack(side=tk.RIGHT)
+    if index != 0:
+        previousButton = tk.Button(
+            thumbnailsFrame,
+            text="Previous",
+            command=lambda: displayThumbnails(index - 1),
+        )
+        previousButton.pack(side=tk.LEFT, padx=5)
+    nextIndex = index + 1
+    if nextIndex * 6 < fileCount:
+        nextButton = tk.Button(
+            thumbnailsFrame,
+            text="Next",
+            command=lambda: displayThumbnails(nextIndex),
+        )
+        nextButton.pack(side=tk.RIGHT, padx=5)
+
+
 def loadImage(imagePath, size=(640, 640)):
     image = Image.open(imagePath)
     image = image.resize(size)
     return image
+
+
+def createBlankImage(size=(640, 640)):
+    blank_image = Image.new("RGB", size, (255, 255, 255))
+    return blank_image
 
 
 def uploadImage():
@@ -42,10 +104,7 @@ def uploadImage():
         imageLabel.image = imageTk  # Keep a reference to avoid garbage collection
 
 
-def loadPreviousImage():
-    imagePath = filedialog.askopenfilename(
-        initialdir="Interface/Images", filetypes=[("Image files", "*.jpg *.jpeg *.png")]
-    )
+def loadPreviousImage(imagePath):
     if imagePath and os.path.exists(imagePath):
         global image
         global filename
@@ -98,6 +157,15 @@ exitButton.grid(row=1, column=3, padx=20)
 # Create image display area
 imageLabel = tk.Label(window)
 imageLabel.grid(row=2, column=0, columnspan=4, pady=20)
+blank_image = createBlankImage()
+blank_imageTk = ImageTk.PhotoImage(blank_image)
+imageLabel.config(image=blank_imageTk)
+imageLabel.image = blank_imageTk  # Keep a reference to avoid garbage collection
+
+# Create thumbnail display area for loaded images
+thumbnailsFrame = tk.Frame(window)
+thumbnailsFrame.grid(row=0, rowspan=3, column=4, padx=20, pady=20, sticky="n")
+displayThumbnails()
 
 # Run the application
 window.mainloop()

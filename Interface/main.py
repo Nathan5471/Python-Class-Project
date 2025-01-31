@@ -49,8 +49,8 @@ def displayThumbnails(index: int = 0) -> None:
     files = os.listdir(savedImagesPath)
     fileCount = len(files)
     file = -1
-    small = index * 6
-    large = small + 5
+    small = index * 5
+    large = small + 4
 
     for filename in files:
         if (
@@ -121,6 +121,20 @@ def loadImage(imagePath: str, size: tuple[int, int] = (640, 640)) -> Image:
     return image
 
 
+def resizeImage(image: Image, size: tuple[int, int] = (640, 640)) -> Image:
+    """
+    Resizes the given image to the given size.
+
+    Args:
+    image: The image to resize.
+    size: The size to resize the image to. Default is (640, 640).
+
+    Returns:
+    The resized image.
+    """
+    return image.resize(size)
+
+
 def deletedSavedImage(imagePath: str) -> None:
     """
     Deletes the image at the given path.
@@ -160,20 +174,53 @@ def uploadImage() -> None:
     None
     """
     global imagePath
+    imagePath = None
     imagePath = filedialog.askopenfilename(
         filetypes=[("Image files", "*.jpg *.jpeg *.png")]
     )
-    if imagePath and os.path.exists(imagePath):
-        global image
-        global filename
-        filename = os.path.basename(imagePath)
+    if not (imagePath and os.path.exists(imagePath)):
+        tk.messagebox.showerror("Error", f"Invalid file path: {imagePath}")
+    global image
+    global filename
+    filename = os.path.basename(imagePath)
+    imagePath = os.path.join("Interface/Images", filename)
+    if os.path.exists(imagePath):
+        tk.messagebox.showerror(
+            "Error", "Image already exists, loading it from saved images."
+        )
+        loadPreviousImage(imagePath)
+    else:
         shutil.copy(imagePath, "Interface/Images")
-        imagePath = os.path.join("Interface/Images", filename)
         image = loadImage(imagePath)
-        imageTk = ImageTk.PhotoImage(image)
-        imageLabel.config(image=imageTk)
-        imageLabel.image = imageTk  # Keep a reference to avoid garbage collection
+        displayImage(image)
         displayThumbnails()
+
+
+def saveImage(image: Image) -> None:
+    """
+    Saves the given image to the saved images.
+
+    Args:
+    image: The image to save.
+
+    Returns:
+    None
+    """
+    if not image:
+        tk.messagebox.showerror("Error", "No image to save.")
+        return
+    imagePath = filedialog.asksaveasfilename(
+        filetypes=[("Image files", "*.jpg *.jpeg *.png")]
+    )
+    if imagePath:
+        try:
+            image.save(imagePath)
+            tk.messagebox.showinfo("Success", "Image saved successfully.")
+        except:
+            tk.messagebox.showerror(
+                "Error",
+                "Failed to save the image. Please try again and make sure to use a file extension of .jpg, .jpeg, or .png.",
+            )
 
 
 def loadPreviousImage(imagePath: str) -> None:
@@ -191,9 +238,9 @@ def loadPreviousImage(imagePath: str) -> None:
         global filename
         filename = os.path.basename(imagePath)
         image = loadImage(imagePath)
-        imageTk = ImageTk.PhotoImage(image)
-        imageLabel.config(image=imageTk)
-        imageLabel.image = imageTk  # Keep a reference to avoid garbage collection
+        displayImage(image)
+    else:
+        tk.messagebox.showerror("Error", f"Invalid file path: {imagePath}")
 
 
 def detectImage() -> None:
@@ -206,14 +253,47 @@ def detectImage() -> None:
     Returns:
     None
     """
+    global image
     outputFileName = runModel(image, filename)
     if outputFileName:
-        labeledImage = loadImage(f"Interface/Output/{outputFileName}")
-        labeledImageTk = ImageTk.PhotoImage(labeledImage)
-        imageLabel.config(image=labeledImageTk)
-        imageLabel.image = (
-            labeledImageTk  # Keep a reference to avoid garbage collection
-        )
+        image = loadImage(f"Interface/Output/{outputFileName}")
+        displayImage(image)
+    else:
+        tk.messagebox.showerror("Error", "Failed to run the model.")
+
+
+def clearImage() -> None:
+    """
+    Clears the uploaded image from the imageLabel.
+
+    Args:
+    None
+
+    Returns:
+    None
+    """
+    global image
+    global filename
+    image = createBlankImage()
+    displayImage(image)
+    image = None  # Clear the image
+    filename = None
+
+
+def displayImage(image: Image) -> None:
+    """
+    Displays the given image in the imageLabel.
+
+    Args:
+    image: The image to display.
+
+    Returns:
+    None
+    """
+    image = resizeImage(image, (500, 500))
+    imageTk = ImageTk.PhotoImage(image)
+    imageLabel.config(image=imageTk)
+    imageLabel.image = imageTk  # Keep a reference to avoid garbage collection
 
 
 # Creates needed folders
@@ -223,6 +303,11 @@ if not (os.path.exists("Interface/Output")):
     os.mkdir("Interface/Output")
 
 # Load the model
+if not (os.path.exists("Model/my_model.pt")):
+    print("Model not found.")
+    print("Please download the model from the following link:")
+    print("https://github.com/Nathan5471/Python-Class-Project")
+    exit()
 model = YOLO("Model/my_model.pt")
 
 # Create the main window
@@ -232,27 +317,29 @@ window.attributes("-fullscreen", True)
 
 # Create title
 title = tk.Label(window, text="Cat and Dog Detector", font=("Arial", 24))
-title.grid(row=0, column=0, columnspan=3, pady=20)
+title.grid(row=0, column=0, columnspan=5, pady=20)
 
 # Create buttons
 uploadButton = tk.Button(window, text="Upload Image", command=uploadImage)
 uploadButton.grid(row=1, column=0, padx=20)
 detectButton = tk.Button(window, text="Detect", command=detectImage)
 detectButton.grid(row=1, column=1, padx=20)
+clearButton = tk.Button(window, text="Clear", command=clearImage)
+clearButton.grid(row=1, column=2, padx=20)
+saveButton = tk.Button(window, text="Save", command=lambda: saveImage(image))
+saveButton.grid(row=1, column=3, padx=20)
 exitButton = tk.Button(window, text="Exit", command=window.quit)
-exitButton.grid(row=1, column=2, padx=20)
+exitButton.grid(row=1, column=4, padx=20)
 
 # Create image display area
 imageLabel = tk.Label(window)
-imageLabel.grid(row=2, column=0, columnspan=3, pady=20)
-blank_image = createBlankImage()
-blank_imageTk = ImageTk.PhotoImage(blank_image)
-imageLabel.config(image=blank_imageTk)
-imageLabel.image = blank_imageTk  # Keep a reference to avoid garbage collection
+imageLabel.grid(row=2, column=0, columnspan=5, pady=20)
+blankImage = createBlankImage()
+displayImage(blankImage)
 
 # Create thumbnail display area for loaded images
 thumbnailsFrame = tk.Frame(window)
-thumbnailsFrame.grid(row=0, rowspan=3, column=4, padx=20, pady=20, sticky="n")
+thumbnailsFrame.grid(row=0, rowspan=3, column=5, padx=20, pady=20, sticky="n")
 displayThumbnails()
 
 # Run the application

@@ -2,13 +2,26 @@ import tkinter as tk
 import shutil
 import os
 from tkinter import filedialog
-from PIL import Image, ImageTk, ImageDraw, ImageFont
+from PIL import Image, ImageTk
 from ultralytics import YOLO
 
 
-def runModel(image, filename):
+def runModel(image: Image, filenam: str) -> str:
+    """
+    Runs the YOLO model on the given image and saves the output image.
+    Returns the path to the output image.
+
+    Args:
+    image: The image to run the model on.
+    filename: The name of the file.
+
+    Returns:
+    The path to the output image.
+    """
     name, ext = os.path.splitext(filename)
     outputFileName = f"{name}/image0.jpg"
+    if os.path.exists(f"Interface/Output/{outputFileName}"):
+        return outputFileName
     model.predict(
         image,
         conf=0.4,
@@ -19,7 +32,16 @@ def runModel(image, filename):
     return outputFileName
 
 
-def displayThumbnails(index=0):
+def displayThumbnails(index: int = 0) -> None:
+    """
+    Displays thumbnails of the saved images in the thumbnailsFrame.
+
+    Args:
+    index: The index of the first image to display.
+
+    Returns:
+    None
+    """
     for widget in thumbnailsFrame.winfo_children():
         widget.destroy()
 
@@ -59,6 +81,13 @@ def displayThumbnails(index=0):
                 command=lambda imgPath=imagePath: loadPreviousImage(imgPath),
             )
             loadButton.pack(side=tk.RIGHT)
+
+            deleteButton = tk.Button(
+                thumbnailFrame,
+                text="Delete",
+                command=lambda imgPath=imagePath: deletedSavedImage(imgPath),
+            )
+            deleteButton.pack(side=tk.RIGHT)
     if index != 0:
         previousButton = tk.Button(
             thumbnailsFrame,
@@ -76,18 +105,60 @@ def displayThumbnails(index=0):
         nextButton.pack(side=tk.RIGHT, padx=5)
 
 
-def loadImage(imagePath, size=(640, 640)):
+def loadImage(imagePath: str, size: tuple[int, int] = (640, 640)) -> Image:
+    """
+    Loads an image from the given path and resizes it to the given size.
+
+    Args:
+    imagePath: The path to the image.
+    size: The size to resize the image to. Default is (640, 640).
+
+    Returns:
+    The loaded and resized image.
+    """
     image = Image.open(imagePath)
     image = image.resize(size)
     return image
 
 
-def createBlankImage(size=(640, 640)):
+def deletedSavedImage(imagePath: str) -> None:
+    """
+    Deletes the image at the given path.
+
+    Args:
+    imagePath: The path to the image.
+
+    Returns:
+    None
+    """
+    os.remove(imagePath)
+    displayThumbnails()
+
+
+def createBlankImage(size: tuple[int, int] = (640, 640)) -> Image:
+    """
+    Creates a blank image with the given size.
+
+    Args:
+    size: The size of the image. Default is (640, 640).
+
+    Returns:
+    The blank image.
+    """
     blank_image = Image.new("RGB", size, (255, 255, 255))
     return blank_image
 
 
-def uploadImage():
+def uploadImage() -> None:
+    """
+    Opens a file dialog to upload an image and displays it in the imageLabel.
+
+    Args:
+    None
+
+    Returns:
+    None
+    """
     global imagePath
     imagePath = filedialog.askopenfilename(
         filetypes=[("Image files", "*.jpg *.jpeg *.png")]
@@ -102,9 +173,19 @@ def uploadImage():
         imageTk = ImageTk.PhotoImage(image)
         imageLabel.config(image=imageTk)
         imageLabel.image = imageTk  # Keep a reference to avoid garbage collection
+        displayThumbnails()
 
 
-def loadPreviousImage(imagePath):
+def loadPreviousImage(imagePath: str) -> None:
+    """
+    Loads an image from the saved images based on the given path and displays it in the imageLabel.
+
+    Args:
+    imagePath: The path to the image.
+
+    Returns:
+    None
+    """
     if imagePath and os.path.exists(imagePath):
         global image
         global filename
@@ -115,7 +196,16 @@ def loadPreviousImage(imagePath):
         imageLabel.image = imageTk  # Keep a reference to avoid garbage collection
 
 
-def detectImage():
+def detectImage() -> None:
+    """
+    Runs the YOLO model on the uploaded image and displays the labeled image in the imageLabel.
+
+    Args:
+    None
+
+    Returns:
+    None
+    """
     outputFileName = runModel(image, filename)
     if outputFileName:
         labeledImage = loadImage(f"Interface/Output/{outputFileName}")
@@ -142,21 +232,19 @@ window.attributes("-fullscreen", True)
 
 # Create title
 title = tk.Label(window, text="Cat and Dog Detector", font=("Arial", 24))
-title.grid(row=0, column=0, columnspan=4, pady=20)
+title.grid(row=0, column=0, columnspan=3, pady=20)
 
 # Create buttons
 uploadButton = tk.Button(window, text="Upload Image", command=uploadImage)
 uploadButton.grid(row=1, column=0, padx=20)
-loadButton = tk.Button(window, text="Load Images", command=loadPreviousImage)
-loadButton.grid(row=1, column=1, padx=20)
 detectButton = tk.Button(window, text="Detect", command=detectImage)
-detectButton.grid(row=1, column=2, padx=20)
+detectButton.grid(row=1, column=1, padx=20)
 exitButton = tk.Button(window, text="Exit", command=window.quit)
-exitButton.grid(row=1, column=3, padx=20)
+exitButton.grid(row=1, column=2, padx=20)
 
 # Create image display area
 imageLabel = tk.Label(window)
-imageLabel.grid(row=2, column=0, columnspan=4, pady=20)
+imageLabel.grid(row=2, column=0, columnspan=3, pady=20)
 blank_image = createBlankImage()
 blank_imageTk = ImageTk.PhotoImage(blank_image)
 imageLabel.config(image=blank_imageTk)

@@ -1,6 +1,5 @@
 import os
 from ultralytics import YOLO
-import cv2
 
 model = YOLO("Model/my_model.pt")
 inputFolder = "Testing/Input"

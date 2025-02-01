@@ -145,8 +145,12 @@ def deletedSavedImage(imagePath: str) -> None:
     Returns:
     None
     """
-    os.remove(imagePath)
-    displayThumbnails()
+    if os.path.exists(imagePath):
+        os.remove(imagePath)
+        tk.messagebox.showinfo("Success", "Image deleted successfully.")
+        displayThumbnails()
+    else:
+        tk.messagebox.showerror("Error", f"Invalid file path: {imagePath}")
 
 
 def createBlankImage(size: tuple[int, int] = (640, 640)) -> Image:
@@ -215,7 +219,9 @@ def saveImage(image: Image) -> None:
     if imagePath:
         try:
             image.save(imagePath)
-            tk.messagebox.showinfo("Success", "Image saved successfully.")
+            tk.messagebox.showinfo(
+                "Success", f"Image saved successfully to {imagePath}."
+            )
         except:
             tk.messagebox.showerror(
                 "Error",

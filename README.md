@@ -19,6 +19,13 @@ pip install ultralytics
 For looking at individual images, run main.py in the Interface folder
 If you want to run it on lots of images, move the images you want to run into the folder Testing/Input. Run the main.py in Testing, the outputted images will be in Testing/Output
 
+## Example of the program running
+
+
+https://github.com/user-attachments/assets/5a0b1241-abdc-4821-b9a5-7a0ecc84418a
+
+
+
 ## Results
 ![trainingset](https://github.com/user-attachments/assets/3521aabb-808b-476c-be05-acff1a1fe9b5)
 

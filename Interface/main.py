@@ -117,7 +117,7 @@ def loadImage(imagePath: str, size: tuple[int, int] = (640, 640)) -> Image:
     The loaded and resized image.
     """
     image = Image.open(imagePath)
-    image = image.resize(size)
+    image = resizeImage(image, size)
     return image
 
 
@@ -187,15 +187,15 @@ def uploadImage() -> None:
     global image
     global filename
     filename = os.path.basename(imagePath)
-    imagePath = os.path.join("Interface/Images", filename)
-    if os.path.exists(imagePath):
+    savedImagePath = os.path.join("Interface/Images", filename)
+    if os.path.exists(savedImagePath):
         tk.messagebox.showerror(
             "Error", "Image already exists, loading it from saved images."
         )
-        loadPreviousImage(imagePath)
+        loadPreviousImage(savedImagePath)
     else:
         shutil.copy(imagePath, "Interface/Images")
-        image = loadImage(imagePath)
+        image = loadImage(savedImagePath)
         displayImage(image)
         displayThumbnails()
 

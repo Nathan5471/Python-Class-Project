@@ -6,7 +6,7 @@ from PIL import Image, ImageTk
 from ultralytics import YOLO
 
 
-def runModel(image: Image, filenam: str) -> str:
+def runModel(image: Image, filename: str) -> str:
     """
     Runs the YOLO model on the given image and saves the output image.
     Returns the path to the output image.
